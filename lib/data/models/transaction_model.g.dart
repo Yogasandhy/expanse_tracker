@@ -12,12 +12,12 @@ TransactionModel _$TransactionModelFromJson(Map<String, dynamic> json) =>
       description: json['description'] as String,
       amount: (json['amount'] as num).toDouble(),
       type: json['type'] as String,
-      categoryId: json['categoryId'] as String,
-      subcategoryId: json['subcategoryId'] as String,
-      paymentMethodId: json['paymentMethodId'] as String,
+      categoryId: json['category_id'] as String,
+      subcategoryId: json['subcategory_id'] as String?,
+      paymentMethodId: json['payment_method_id'] as String,
       date: json['date'] as String,
-      createdAt: json['createdAt'] as String,
-      updatedAt: json['updatedAt'] as String,
+      createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
     );
 
 Map<String, dynamic> _$TransactionModelToJson(TransactionModel instance) =>
@@ -26,10 +26,10 @@ Map<String, dynamic> _$TransactionModelToJson(TransactionModel instance) =>
       'description': instance.description,
       'amount': instance.amount,
       'type': instance.type,
-      'categoryId': instance.categoryId,
-      'subcategoryId': instance.subcategoryId,
-      'paymentMethodId': instance.paymentMethodId,
+      'category_id': instance.categoryId,
+      'subcategory_id': instance.subcategoryId,
+      'payment_method_id': instance.paymentMethodId,
       'date': instance.date,
-      'createdAt': instance.createdAt,
-      'updatedAt': instance.updatedAt,
+      'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
     };

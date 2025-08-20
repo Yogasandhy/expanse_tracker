@@ -7,18 +7,18 @@ part 'category_model.g.dart';
 class CategoryModel {
   final String id;
   final String name;
-  final String iconName;
-  final String colorHex;
-  final bool isIncomeCategory;
-  final List<SubcategoryModel> subcategories;
+  final String? iconName;
+  final String? colorHex;
+  final bool? isIncomeCategory;
+  final List<SubcategoryModel>? subcategories;
 
   const CategoryModel({
     required this.id,
     required this.name,
-    required this.iconName,
-    required this.colorHex,
-    required this.isIncomeCategory,
-    required this.subcategories,
+    this.iconName,
+    this.colorHex,
+    this.isIncomeCategory,
+    this.subcategories,
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) =>
@@ -43,10 +43,10 @@ class CategoryModel {
     return Category(
       id: id,
       name: name,
-      iconName: iconName,
-      colorHex: colorHex,
-      isIncomeCategory: isIncomeCategory,
-      subcategories: subcategories.map((sub) => sub.toEntity()).toList(),
+      iconName: iconName ?? 'category',
+      colorHex: colorHex ?? '#64748B',
+      isIncomeCategory: isIncomeCategory ?? false,
+      subcategories: subcategories?.map((sub) => sub.toEntity()).toList() ?? [],
     );
   }
 }

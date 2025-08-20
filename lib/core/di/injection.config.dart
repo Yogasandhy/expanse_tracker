@@ -11,16 +11,14 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:supabase_flutter/supabase_flutter.dart' as _i454;
 
-import '../../data/repositories_impl/category_repository_impl.dart' as _i383;
-import '../../data/repositories_impl/payment_method_repository_impl.dart'
-    as _i879;
+import '../../data/datasources/supabase_data_source.dart' as _i759;
 import '../../data/repositories_impl/transaction_repository_impl.dart' as _i468;
-import '../../domain/repositories/category_repository.dart' as _i485;
-import '../../domain/repositories/payment_method_repository.dart' as _i290;
 import '../../domain/repositories/transaction_repository.dart' as _i302;
 import '../../domain/usecases/transaction_usecases.dart' as _i47;
 import '../../presentation/blocs/transaction/transaction_bloc.dart' as _i937;
+import 'injection.dart' as _i464;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -29,14 +27,13 @@ extension GetItInjectableX on _i174.GetIt {
     _i526.EnvironmentFilter? environmentFilter,
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    final registerModule = _$RegisterModule();
+    gh.lazySingleton<_i454.SupabaseClient>(() => registerModule.supabaseClient);
+    gh.lazySingleton<_i759.SupabaseDataSource>(
+      () => _i759.SupabaseDataSourceImpl(gh<_i454.SupabaseClient>()),
+    );
     gh.lazySingleton<_i302.TransactionRepository>(
-      () => _i468.TransactionRepositoryImpl(),
-    );
-    gh.lazySingleton<_i290.PaymentMethodRepository>(
-      () => _i879.PaymentMethodRepositoryImpl(),
-    );
-    gh.lazySingleton<_i485.CategoryRepository>(
-      () => _i383.CategoryRepositoryImpl(),
+      () => _i468.TransactionRepositoryImpl(gh<_i759.SupabaseDataSource>()),
     );
     gh.factory<_i47.GetAllTransactions>(
       () => _i47.GetAllTransactions(gh<_i302.TransactionRepository>()),
@@ -73,3 +70,5 @@ extension GetItInjectableX on _i174.GetIt {
     return this;
   }
 }
+
+class _$RegisterModule extends _i464.RegisterModule {}

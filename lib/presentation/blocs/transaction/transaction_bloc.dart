@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
-import '../../../domain/entities/transaction.dart';
+import '../../../domain/entities/transaction_entity.dart';
 import '../../../domain/usecases/transaction_usecases.dart' as usecases;
 import '../../../domain/usecases/usecase.dart';
 import 'transaction_event.dart';
@@ -90,6 +90,9 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     AddTransactionEvent event,
     Emitter<TransactionState> emit,
   ) async {
+    print('🚀 [TransactionBloc] Starting add transaction process...');
+    print('📝 [TransactionBloc] Transaction data: ${event.description}, ${event.amount}, ${event.type}');
+    
     emit(TransactionLoading());
 
     final now = DateTime.now();
@@ -106,21 +109,43 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       updatedAt: now,
     );
 
+    print('🆔 [TransactionBloc] Generated transaction ID: ${transaction.id}');
+    print('📅 [TransactionBloc] Transaction date: ${transaction.date}');
+
     final result = await _addTransaction(
       usecases.AddTransactionParams(transaction: transaction),
     );
 
-    result.fold(
-      (failure) => emit(TransactionError(message: failure.message)),
+    await result.fold(
+      (failure) async {
+        print('❌ [TransactionBloc] Failed to add transaction: ${failure.message}');
+        if (!emit.isDone) {
+          emit(TransactionError(message: failure.message));
+        }
+      },
       (addedTransaction) async {
+        print('✅ [TransactionBloc] Transaction added successfully!');
+        print('💾 [TransactionBloc] Added transaction ID: ${addedTransaction.id}');
+        
         // Reload transactions after adding
+        print('🔄 [TransactionBloc] Reloading all transactions...');
         final reloadResult = await _getAllTransactions(NoParams());
-        reloadResult.fold(
-          (failure) => emit(TransactionError(message: failure.message)),
-          (transactions) => emit(TransactionOperationSuccess(
-            message: 'Transaction added successfully',
-            transactions: transactions,
-          )),
+        await reloadResult.fold(
+          (failure) async {
+            print('❌ [TransactionBloc] Failed to reload transactions: ${failure.message}');
+            if (!emit.isDone) {
+              emit(TransactionError(message: failure.message));
+            }
+          },
+          (transactions) async {
+            print('📊 [TransactionBloc] Successfully reloaded ${transactions.length} transactions');
+            if (!emit.isDone) {
+              emit(TransactionOperationSuccess(
+                message: 'Transaction added successfully',
+                transactions: transactions,
+              ));
+            }
+          },
         );
       },
     );

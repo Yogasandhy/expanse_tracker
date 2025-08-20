@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/transaction.dart';
+import '../../../domain/entities/transaction_entity.dart';
 import '../../blocs/transaction/transaction_bloc.dart';
 import '../../blocs/transaction/transaction_state.dart';
 import '../../blocs/theme/theme_bloc.dart';
 import '../../blocs/theme/theme_event.dart';
 import '../../blocs/theme/theme_state.dart';
 import '../../../core/utils/date_time_helper.dart';
+import '../transactions/all_transactions_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -291,7 +292,11 @@ class DashboardPage extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  // Navigate to transactions page
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AllTransactionsPage(),
+                    ),
+                  );
                 },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -424,7 +429,7 @@ class DashboardPage extends StatelessWidget {
                   ),
                 ],
               ),
-            )).toList(),
+            )),
         ],
       ),
     );

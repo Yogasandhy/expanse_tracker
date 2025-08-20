@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-import '../../domain/entities/transaction.dart';
+import '../../domain/entities/transaction_entity.dart';
 
 part 'transaction_model.g.dart';
 
@@ -9,12 +9,17 @@ class TransactionModel {
   final String description;
   final double amount;
   final String type; // 'income' or 'expense'
+  @JsonKey(name: 'category_id')
   final String categoryId;
-  final String subcategoryId;
+  @JsonKey(name: 'subcategory_id')
+  final String? subcategoryId; // Made nullable
+  @JsonKey(name: 'payment_method_id')
   final String paymentMethodId;
   final String date; // ISO 8601 string
-  final String createdAt; // ISO 8601 string
-  final String updatedAt; // ISO 8601 string
+  @JsonKey(name: 'created_at')
+  final String? createdAt; // Made nullable
+  @JsonKey(name: 'updated_at')
+  final String? updatedAt; // Made nullable
 
   const TransactionModel({
     required this.id,
@@ -22,11 +27,11 @@ class TransactionModel {
     required this.amount,
     required this.type,
     required this.categoryId,
-    required this.subcategoryId,
+    this.subcategoryId, // Made optional
     required this.paymentMethodId,
     required this.date,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt, // Made optional
+    this.updatedAt, // Made optional
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) =>
@@ -44,8 +49,8 @@ class TransactionModel {
       subcategoryId: transaction.subcategoryId,
       paymentMethodId: transaction.paymentMethodId,
       date: transaction.date.toIso8601String(),
-      createdAt: transaction.createdAt.toIso8601String(),
-      updatedAt: transaction.updatedAt.toIso8601String(),
+      createdAt: transaction.createdAt?.toIso8601String(),
+      updatedAt: transaction.updatedAt?.toIso8601String(),
     );
   }
 
@@ -59,8 +64,8 @@ class TransactionModel {
       subcategoryId: subcategoryId,
       paymentMethodId: paymentMethodId,
       date: DateTime.parse(date),
-      createdAt: DateTime.parse(createdAt),
-      updatedAt: DateTime.parse(updatedAt),
+      createdAt: createdAt != null ? DateTime.parse(createdAt!) : null,
+      updatedAt: updatedAt != null ? DateTime.parse(updatedAt!) : null,
     );
   }
 }

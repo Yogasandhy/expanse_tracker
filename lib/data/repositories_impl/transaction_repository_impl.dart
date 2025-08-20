@@ -1,29 +1,31 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/entities/transaction.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/transaction_repository.dart';
 import '../../core/error/failures.dart';
-import '../datasources/local_dummy_data_source.dart';
+import '../datasources/supabase_data_source.dart';
 import '../models/transaction_model.dart';
-import 'package:uuid/uuid.dart';
 
 @LazySingleton(as: TransactionRepository)
 class TransactionRepositoryImpl implements TransactionRepository {
-  static const _uuid = Uuid();
+  final SupabaseDataSource _supabaseDataSource;
+
+  TransactionRepositoryImpl(this._supabaseDataSource);
 
   @override
   Future<Either<Failure, List<Transaction>>> getAllTransactions() async {
     try {
-      final transactions = LocalDummyDataSource.transactions
+      final transactionModels = await _supabaseDataSource.getAllTransactions();
+      final transactions = transactionModels
           .map((model) => model.toEntity())
           .toList();
       
-      // Sort by date descending
-      transactions.sort((a, b) => b.date.compareTo(a.date));
-      
       return Right(transactions);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get transactions'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get transactions: ${e.toString()}'));
     }
   }
 
@@ -33,7 +35,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
     DateTime endDate,
   ) async {
     try {
-      final transactions = LocalDummyDataSource.transactions
+      // Get all transactions first (you can optimize this with SQL queries later)
+      final transactionModels = await _supabaseDataSource.getAllTransactions();
+      final transactions = transactionModels
           .where((model) {
             final date = DateTime.parse(model.date);
             return date.isAfter(startDate.subtract(const Duration(days: 1))) &&
@@ -42,11 +46,12 @@ class TransactionRepositoryImpl implements TransactionRepository {
           .map((model) => model.toEntity())
           .toList();
       
-      transactions.sort((a, b) => b.date.compareTo(a.date));
-      
       return Right(transactions);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get transactions by date range'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get transactions by date range: ${e.toString()}'));
     }
   }
 
@@ -55,90 +60,106 @@ class TransactionRepositoryImpl implements TransactionRepository {
     String categoryId,
   ) async {
     try {
-      final transactions = LocalDummyDataSource.transactions
+      // Get all transactions first (you can optimize this with SQL queries later)
+      final transactionModels = await _supabaseDataSource.getAllTransactions();
+      final transactions = transactionModels
           .where((model) => model.categoryId == categoryId)
           .map((model) => model.toEntity())
           .toList();
       
-      transactions.sort((a, b) => b.date.compareTo(a.date));
-      
       return Right(transactions);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get transactions by category'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get transactions by category: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, Transaction>> getTransactionById(String id) async {
     try {
-      final model = LocalDummyDataSource.transactions
-          .firstWhere((model) => model.id == id);
-      
-      return Right(model.toEntity());
+      final transactionModel = await _supabaseDataSource.getTransactionById(id);
+      return Right(transactionModel.toEntity());
     } catch (e) {
-      return const Left(NotFoundFailure('Transaction not found'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get transaction: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, Transaction>> addTransaction(Transaction transaction) async {
     try {
-      final now = DateTime.now();
-      final newTransaction = transaction.copyWith(
-        id: _uuid.v4(),
-        createdAt: now,
-        updatedAt: now,
-      );
+      print('🗄️ [TransactionRepository] Converting entity to model...');
+      final transactionModel = TransactionModel.fromEntity(transaction);
       
-      final model = TransactionModel.fromEntity(newTransaction);
-      LocalDummyDataSource.addTransaction(model);
+      print('📤 [TransactionRepository] Calling data source to save transaction...');
+      print('💰 [TransactionRepository] Amount: ${transactionModel.amount}');
+      print('📝 [TransactionRepository] Description: ${transactionModel.description}');
+      print('🔖 [TransactionRepository] Type: ${transactionModel.type}');
       
-      return Right(newTransaction);
+      final addedModel = await _supabaseDataSource.addTransaction(transactionModel);
+      
+      print('✅ [TransactionRepository] Data source returned success!');
+      print('🆔 [TransactionRepository] Saved transaction ID: ${addedModel.id}');
+      
+      return Right(addedModel.toEntity());
     } catch (e) {
-      return const Left(CacheFailure('Failed to add transaction'));
+      print('❌ [TransactionRepository] Error occurred: ${e.toString()}');
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to add transaction: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, Transaction>> updateTransaction(Transaction transaction) async {
     try {
-      final updatedTransaction = transaction.copyWith(
-        updatedAt: DateTime.now(),
-      );
+      final transactionModel = TransactionModel.fromEntity(transaction);
+      final updatedModel = await _supabaseDataSource.updateTransaction(transactionModel);
       
-      final model = TransactionModel.fromEntity(updatedTransaction);
-      LocalDummyDataSource.updateTransaction(model);
-      
-      return Right(updatedTransaction);
+      return Right(updatedModel.toEntity());
     } catch (e) {
-      return const Left(CacheFailure('Failed to update transaction'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to update transaction: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, void>> deleteTransaction(String id) async {
     try {
-      LocalDummyDataSource.deleteTransaction(id);
+      await _supabaseDataSource.deleteTransaction(id);
       return const Right(null);
     } catch (e) {
-      return const Left(CacheFailure('Failed to delete transaction'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to delete transaction: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, List<Transaction>>> searchTransactions(String query) async {
     try {
-      final transactions = LocalDummyDataSource.transactions
+      // Get all transactions first (you can optimize this with SQL queries later)
+      final transactionModels = await _supabaseDataSource.getAllTransactions();
+      final transactions = transactionModels
           .where((model) => 
-              model.description.toLowerCase().contains(query.toLowerCase()))
+            model.description.toLowerCase().contains(query.toLowerCase()))
           .map((model) => model.toEntity())
           .toList();
       
-      transactions.sort((a, b) => b.date.compareTo(a.date));
-      
       return Right(transactions);
     } catch (e) {
-      return const Left(CacheFailure('Failed to search transactions'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to search transactions: ${e.toString()}'));
     }
   }
 }

@@ -1,62 +1,77 @@
 import 'package:dartz/dartz.dart';
-import 'package:injectable/injectable.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../../core/error/failures.dart';
-import '../datasources/local_dummy_data_source.dart';
+import '../datasources/supabase_data_source.dart';
 
-@LazySingleton(as: CategoryRepository)
 class CategoryRepositoryImpl implements CategoryRepository {
+  final SupabaseDataSource _supabaseDataSource;
+
+  CategoryRepositoryImpl(this._supabaseDataSource);
+
   @override
   Future<Either<Failure, List<Category>>> getAllCategories() async {
     try {
-      final categories = LocalDummyDataSource.categories
+      final categoryModels = await _supabaseDataSource.getAllCategories();
+      final categories = categoryModels
           .map((model) => model.toEntity())
           .toList();
       
       return Right(categories);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get categories'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get categories: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, List<Category>>> getIncomeCategories() async {
     try {
-      final categories = LocalDummyDataSource.categories
-          .where((model) => model.isIncomeCategory)
+      final categoryModels = await _supabaseDataSource.getAllCategories();
+      final categories = categoryModels
+          .where((model) => model.isIncomeCategory == true)
           .map((model) => model.toEntity())
           .toList();
       
       return Right(categories);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get income categories'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get income categories: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, List<Category>>> getExpenseCategories() async {
     try {
-      final categories = LocalDummyDataSource.categories
-          .where((model) => !model.isIncomeCategory)
+      final categoryModels = await _supabaseDataSource.getAllCategories();
+      final categories = categoryModels
+          .where((model) => model.isIncomeCategory != true)
           .map((model) => model.toEntity())
           .toList();
       
       return Right(categories);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get expense categories'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get expense categories: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, Category>> getCategoryById(String id) async {
     try {
-      final model = LocalDummyDataSource.categories
-          .firstWhere((model) => model.id == id);
-      
-      return Right(model.toEntity());
+      final categoryModel = await _supabaseDataSource.getCategoryById(id);
+      return Right(categoryModel.toEntity());
     } catch (e) {
-      return const Left(NotFoundFailure('Category not found'));
+      if (e is DatabaseFailure) {
+        return Left(e);
+      }
+      return Left(DatabaseFailure('Failed to get category: ${e.toString()}'));
     }
   }
 
@@ -65,33 +80,29 @@ class CategoryRepositoryImpl implements CategoryRepository {
     String categoryId,
   ) async {
     try {
-      final category = LocalDummyDataSource.categories
-          .firstWhere((model) => model.id == categoryId);
-      
-      final subcategories = category.subcategories
-          .map((model) => model.toEntity())
-          .toList();
-      
-      return Right(subcategories);
+      // For now, return empty list since subcategories are optional
+      // In the future, this can be implemented when subcategories table is needed
+      return const Right([]);
     } catch (e) {
-      return const Left(NotFoundFailure('Subcategories not found'));
+      return Left(DatabaseFailure('Failed to get subcategories: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, Subcategory>> getSubcategoryById(String id) async {
     try {
-      for (final category in LocalDummyDataSource.categories) {
-        for (final subcategory in category.subcategories) {
-          if (subcategory.id == id) {
-            return Right(subcategory.toEntity());
-          }
-        }
-      }
+      // For now, return a simple subcategory since it's optional
+      // This prevents app from crashing when subcategory ID is referenced
+      final defaultSubcategory = Subcategory(
+        id: id,
+        name: 'General',
+        iconName: 'category',
+        categoryId: id.substring(0, 36), // Extract category ID from subcategory ID
+      );
       
-      return const Left(NotFoundFailure('Subcategory not found'));
+      return Right(defaultSubcategory);
     } catch (e) {
-      return const Left(CacheFailure('Failed to get subcategory'));
+      return Left(DatabaseFailure('Failed to get subcategory: ${e.toString()}'));
     }
   }
 }

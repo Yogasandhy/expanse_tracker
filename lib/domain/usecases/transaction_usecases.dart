@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import '../entities/transaction.dart';
+import '../entities/transaction_entity.dart';
 import '../repositories/transaction_repository.dart';
 import '../../core/error/failures.dart';
 import 'usecase.dart';
@@ -50,7 +50,17 @@ class AddTransaction implements UseCase<Transaction, AddTransactionParams> {
 
   @override
   Future<Either<Failure, Transaction>> call(AddTransactionParams params) async {
-    return await repository.addTransaction(params.transaction);
+    print('🎯 [AddTransaction UseCase] Calling repository to add transaction...');
+    print('📋 [AddTransaction UseCase] Transaction details: ${params.transaction.description} - ${params.transaction.amount}');
+    
+    final result = await repository.addTransaction(params.transaction);
+    
+    result.fold(
+      (failure) => print('❌ [AddTransaction UseCase] Repository returned failure: ${failure.message}'),
+      (transaction) => print('✅ [AddTransaction UseCase] Repository returned success: ${transaction.id}'),
+    );
+    
+    return result;
   }
 }
 

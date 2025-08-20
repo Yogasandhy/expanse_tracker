@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../domain/entities/transaction.dart';
+import '../../../domain/entities/transaction_entity.dart';
 import '../../blocs/transaction/transaction_bloc.dart';
 import '../../blocs/transaction/transaction_state.dart';
 import '../../../core/utils/date_time_helper.dart';
+import 'all_transactions_page.dart';
 
 class TransactionsPage extends StatelessWidget {
   const TransactionsPage({super.key});
@@ -23,18 +24,49 @@ class TransactionsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Transactions',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B),
-                    ),
-                  ),
-                  Text(
-                    'Track your spending history',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Transactions',
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : const Color(0xFF1E293B),
+                            ),
+                          ),
+                          Text(
+                            'Track your spending history',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const AllTransactionsPage(),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.view_list_rounded,
+                          size: 18,
+                          color: const Color(0xFF8B5CF6),
+                        ),
+                        label: Text(
+                          'View All',
+                          style: TextStyle(
+                            color: const Color(0xFF8B5CF6),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

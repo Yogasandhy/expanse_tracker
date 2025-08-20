@@ -8,11 +8,11 @@ class Transaction extends Equatable {
   final double amount;
   final TransactionType type;
   final String categoryId;
-  final String? subcategoryId; // Made nullable
+  final String? subcategoryId;
   final String paymentMethodId;
   final DateTime date;
-  final DateTime? createdAt; // Made nullable
-  final DateTime? updatedAt; // Made nullable
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Transaction({
     required this.id,
@@ -20,11 +20,11 @@ class Transaction extends Equatable {
     required this.amount,
     required this.type,
     required this.categoryId,
-    this.subcategoryId, // Made optional
+    this.subcategoryId,
     required this.paymentMethodId,
     required this.date,
-    this.createdAt, // Made optional
-    this.updatedAt, // Made optional
+    this.createdAt,
+    this.updatedAt,
   });
 
   Transaction copyWith({

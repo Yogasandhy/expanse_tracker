@@ -10,11 +10,11 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
     CategoryModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      iconName: json['iconName'] as String,
-      colorHex: json['colorHex'] as String,
-      isIncomeCategory: json['isIncomeCategory'] as bool,
-      subcategories: (json['subcategories'] as List<dynamic>)
-          .map((e) => SubcategoryModel.fromJson(e as Map<String, dynamic>))
+      iconName: json['iconName'] as String?,
+      colorHex: json['colorHex'] as String?,
+      isIncomeCategory: json['isIncomeCategory'] as bool?,
+      subcategories: (json['subcategories'] as List<dynamic>?)
+          ?.map((e) => SubcategoryModel.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 

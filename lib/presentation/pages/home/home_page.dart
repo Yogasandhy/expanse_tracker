@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../dashboard/dashboard_page.dart';
 import '../transactions/transactions_page.dart';
-import '../budget/budget_page.dart';
 import '../settings/settings_page.dart';
-import '../transactions/add_transaction_page.dart';
+import '../transactions/add_transaction_page_simple.dart';
+import '../../blocs/transaction/transaction_bloc.dart';
+import '../../blocs/transaction/transaction_event.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,21 +22,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final List<IconData> _iconList = [
     Icons.dashboard_rounded,
     Icons.receipt_long_rounded,
-    Icons.savings_rounded,
     Icons.settings_rounded,
   ];
 
   final List<String> _titleList = [
     'Dashboard',
     'Transactions',
-    'Budget',
     'Settings',
   ];
 
   final List<Widget> _pages = const [
     DashboardPage(),
     TransactionsPage(),
-    BudgetPage(),
     SettingsPage(),
   ];
 
@@ -48,6 +47,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
 
     _fabAnimationController.forward();
+    
+    // Load initial data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<TransactionBloc>().add(LoadTransactions());
+      }
+    });
   }
 
   @override
@@ -118,10 +124,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           splashColor: const Color(0xFF8B5CF6).withOpacity(0.1),
           splashSpeedInMilliseconds: 300,
           notchSmoothness: NotchSmoothness.defaultEdge,
-          gapLocation: GapLocation.center,
+          gapLocation: GapLocation.end,
           leftCornerRadius: 20,
-          rightCornerRadius: 20,
-          onTap: (index) => setState(() => _currentIndex = index),
+          rightCornerRadius: 0,
+          onTap: (index) {
+            setState(() => _currentIndex = index);
+            
+            // Refresh data when switching to dashboard tab
+            if (index == 0 && context.mounted) {
+              context.read<TransactionBloc>().add(LoadTransactions());
+            }
+          },
           hideAnimationController: _fabAnimationController,
           shadow: const BoxShadow(
             offset: Offset(0, 0),
@@ -150,13 +163,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            final result = await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const AddTransactionPage(),
+                builder: (context) => const AddTransactionPageSimple(),
               ),
             );
+            
+            // If transaction was added successfully, refresh data
+            if (result == true) {
+              // Find the TransactionBloc in the widget tree and trigger reload
+              if (context.mounted) {
+                context.read<TransactionBloc>().add(LoadTransactions());
+              }
+            }
           },
           backgroundColor: Colors.transparent,
           elevation: 0,
