@@ -9,7 +9,6 @@ class Transaction extends Equatable {
   final TransactionType type;
   final String categoryId;
   final String? subcategoryId;
-  final String paymentMethodId;
   final DateTime date;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -21,7 +20,6 @@ class Transaction extends Equatable {
     required this.type,
     required this.categoryId,
     this.subcategoryId,
-    required this.paymentMethodId,
     required this.date,
     this.createdAt,
     this.updatedAt,
@@ -34,7 +32,6 @@ class Transaction extends Equatable {
     TransactionType? type,
     String? categoryId,
     String? subcategoryId,
-    String? paymentMethodId,
     DateTime? date,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -46,7 +43,6 @@ class Transaction extends Equatable {
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       subcategoryId: subcategoryId ?? this.subcategoryId,
-      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -73,7 +69,6 @@ class Transaction extends Equatable {
         type,
         categoryId,
         subcategoryId,
-        paymentMethodId,
         date,
         createdAt,
         updatedAt,

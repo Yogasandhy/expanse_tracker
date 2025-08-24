@@ -103,7 +103,6 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       type: event.type,
       categoryId: event.categoryId,
       subcategoryId: event.subcategoryId,
-      paymentMethodId: event.paymentMethodId,
       date: event.date,
       createdAt: now,
       updatedAt: now,

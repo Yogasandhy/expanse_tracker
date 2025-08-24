@@ -45,19 +45,30 @@ class _AddTransactionPageSimpleState extends State<AddTransactionPageSimple> {
       final dataSource = getIt<SupabaseDataSource>();
       final categoriesFromDb = await dataSource.getAllCategories();
       
+      print('🏷️ [Categories] Loaded ${categoriesFromDb.length} categories from database');
+      for (var cat in categoriesFromDb) {
+        print('🏷️ [Category] ID: ${cat.id}, Name: ${cat.name}, Icon: ${cat.iconName}, Color: ${cat.colorHex}');
+      }
+      
       if (categoriesFromDb.isNotEmpty) {
         setState(() {
           _categories = categoriesFromDb.map((cat) => CategoryItem(
             cat.id,
             cat.name,
-            _getIconFromName(cat.iconName ?? 'category'),
+            _getIconFromName(cat.name), // Use category name instead of iconName
             _getColorFromHex(cat.colorHex ?? '#64748B'),
           )).toList();
           _selectedCategory = _categories.first.id;
           _isLoadingCategories = false;
         });
+        
+        print('🏷️ [Categories] Mapped to ${_categories.length} CategoryItems');
+        for (var cat in _categories) {
+          print('🏷️ [CategoryItem] ID: ${cat.id}, Name: ${cat.name}, Icon: ${cat.icon}');
+        }
       } else {
         // Fallback default categories
+        print('🏷️ [Categories] No categories in database, using defaults');
         setState(() {
           _categories = _getDefaultCategories();
           _selectedCategory = _categories.first.id;
@@ -65,6 +76,7 @@ class _AddTransactionPageSimpleState extends State<AddTransactionPageSimple> {
         });
       }
     } catch (e) {
+      print('❌ [Categories] Error loading: $e');
       setState(() {
         _categories = _getDefaultCategories();
         _selectedCategory = _categories.first.id;
@@ -84,18 +96,46 @@ class _AddTransactionPageSimpleState extends State<AddTransactionPageSimple> {
     ];
   }
 
-  // Simple icon mapping
-  IconData _getIconFromName(String iconName) {
-    switch (iconName.toLowerCase()) {
-      case 'restaurant': case 'food': return Icons.restaurant;
-      case 'directions_car': case 'transport': return Icons.directions_car;
-      case 'movie': case 'entertainment': return Icons.movie;
-      case 'shopping_bag': case 'shopping': return Icons.shopping_bag;
-      case 'work': case 'salary': return Icons.work;
-      case 'laptop': case 'freelance': return Icons.laptop;
-      case 'trending_up': case 'investment': return Icons.trending_up;
-      default: return Icons.category;
-    }
+  // Improved icon mapping based on category name (no database needed)
+  IconData _getIconFromName(String categoryName) {
+    print('🎨 Icon mapping for category: "$categoryName"');
+    
+    final iconData = switch (categoryName.toLowerCase()) {
+      // Food & Dining
+      'food' || 'makanan' || 'food & dining' => Icons.restaurant,
+      'coffee' || 'kopi' => Icons.local_cafe,
+      'groceries' || 'belanja' => Icons.shopping_cart,
+      
+      // Transport
+      'transport' || 'transportation' || 'transportasi' => Icons.directions_car,
+      'fuel' || 'bensin' || 'gas' => Icons.local_gas_station,
+      'bus' || 'public transport' => Icons.directions_bus,
+      
+      // Income
+      'salary' || 'gaji' => Icons.attach_money,
+      'bonus' || 'gift' => Icons.card_giftcard,
+      'investment' || 'investasi' => Icons.trending_up,
+      'freelance' => Icons.laptop,
+      
+      // Entertainment
+      'entertainment' || 'hiburan' => Icons.movie,
+      'gaming' || 'game' => Icons.sports_esports,
+      
+      // Shopping
+      'shopping' || 'belanja' => Icons.shopping_bag,
+      'clothes' || 'pakaian' => Icons.checkroom,
+      
+      // Bills & Utilities
+      'bills' || 'tagihan' => Icons.bolt,
+      'electricity' || 'listrik' => Icons.bolt,
+      'rent' || 'sewa' => Icons.home,
+      
+      // Default fallback
+      _ => Icons.category,
+    };
+    
+    print('🎨 Mapped "$categoryName" to: $iconData');
+    return iconData;
   }
 
   // Simple color parsing
@@ -120,7 +160,6 @@ class _AddTransactionPageSimpleState extends State<AddTransactionPageSimple> {
         type: _selectedType,
         categoryId: _selectedCategory,
         subcategoryId: '${_selectedCategory}_sub', // Simple subcategory
-        paymentMethodId: 'default-cash', // Default payment method
         date: _selectedDate,
       ));
     }

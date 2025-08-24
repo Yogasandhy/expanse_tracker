@@ -38,7 +38,6 @@ class AddTransactionEvent extends TransactionEvent {
   final TransactionType type;
   final String categoryId;
   final String subcategoryId;
-  final String paymentMethodId;
   final DateTime date;
 
   const AddTransactionEvent({
@@ -47,7 +46,6 @@ class AddTransactionEvent extends TransactionEvent {
     required this.type,
     required this.categoryId,
     required this.subcategoryId,
-    required this.paymentMethodId,
     required this.date,
   });
 
@@ -58,7 +56,6 @@ class AddTransactionEvent extends TransactionEvent {
         type,
         categoryId,
         subcategoryId,
-        paymentMethodId,
         date,
       ];
 }

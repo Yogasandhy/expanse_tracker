@@ -13,8 +13,6 @@ class TransactionModel {
   final String categoryId;
   @JsonKey(name: 'subcategory_id')
   final String? subcategoryId; // Made nullable
-  @JsonKey(name: 'payment_method_id')
-  final String paymentMethodId;
   final String date; // ISO 8601 string
   @JsonKey(name: 'created_at')
   final String? createdAt; // Made nullable
@@ -28,7 +26,6 @@ class TransactionModel {
     required this.type,
     required this.categoryId,
     this.subcategoryId, // Made optional
-    required this.paymentMethodId,
     required this.date,
     this.createdAt, // Made optional
     this.updatedAt, // Made optional
@@ -47,7 +44,6 @@ class TransactionModel {
       type: transaction.type == TransactionType.income ? 'income' : 'expense',
       categoryId: transaction.categoryId,
       subcategoryId: transaction.subcategoryId,
-      paymentMethodId: transaction.paymentMethodId,
       date: transaction.date.toIso8601String(),
       createdAt: transaction.createdAt?.toIso8601String(),
       updatedAt: transaction.updatedAt?.toIso8601String(),
@@ -62,7 +58,6 @@ class TransactionModel {
       type: type == 'income' ? TransactionType.income : TransactionType.expense,
       categoryId: categoryId,
       subcategoryId: subcategoryId,
-      paymentMethodId: paymentMethodId,
       date: DateTime.parse(date),
       createdAt: createdAt != null ? DateTime.parse(createdAt!) : null,
       updatedAt: updatedAt != null ? DateTime.parse(updatedAt!) : null,
